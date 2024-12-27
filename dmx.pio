@@ -1,0 +1,40 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+; SET pin 0 should be mapped to your LED GPIO
+
+.program dmx
+    set pins, 1 ; 2us
+    pull block
+    set pins, 0 [31] ; 1
+    nop [31] ; 1
+    nop [23] ; 1
+    set pins, 1 [5] ; 2
+reset:    
+    set pins, 0 ; 4
+    set x, 7 ; 4
+bitloop:
+    out pins, 1 ; 5 & 6
+    jmp X--, bitloop ; 5 & 6
+    set pins, 1 [3] ; 7 & 8
+    jmp !OSRE, reset ; 9
+    set pins, 1 ; 10
+
+
+
+% c-sdk {
+// this is a raw helper function for use by the user which sets up the GPIO output, and configures the SM to output on a particular pin
+
+void dmx_program_init(PIO pio, uint sm, uint offset, uint pin) {
+   pio_gpio_init(pio, pin);
+   pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+   pio_sm_config c = dmx_program_get_default_config(offset);
+   sm_config_set_out_pins(&c, pin, 1);
+   sm_config_set_set_pins(&c, pin, 1);
+   sm_config_set_clkdiv(&c, 250); // Should update evry 2 clock pulses
+   pio_sm_init(pio, sm, offset, &c);
+}
+%}
