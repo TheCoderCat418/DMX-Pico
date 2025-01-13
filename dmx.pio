@@ -25,6 +25,7 @@ void dmx_program_init(PIO pio, uint sm, uint offset, uint pin) {
    pio_sm_config c = dmx_program_get_default_config(offset);
    sm_config_set_out_pins(&c, pin, 1);
    sm_config_set_set_pins(&c, pin, 1);
+   sm_config_set_out_shift(&c, false, true, 16);
    sm_config_set_clkdiv(&c, 250); // Pin should update every 2 clock pulses
    pio_sm_init(pio, sm, offset, &c);
 }
